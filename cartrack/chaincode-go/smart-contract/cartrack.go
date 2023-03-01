@@ -175,5 +175,35 @@ func (s *SmartContract) getRole(ctx contractapi.TransactionContextInterface) (st
 	return role;
 }
 
+// Track Car State by ID found in world state
+func (s *SmartContract) trackCarById(ctx contractapi.TransactionContextInterface, string carId) ([]QueryResult, error) {
+	startKey := ""
+	endKey := ""
+
+	resultsIterator, err := ctx.GetStub().GetHistoryForKey(carId)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resultsIterator.Close()
+
+	results := []QueryResult{}
+
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+
+		if err != nil {
+			return nil, err
+		}
+
+		car := new(Car)
+		_ = json.Unmarshal(queryResponse.Value, car)
+
+		queryResult := QueryResult{Key: queryResponse.Key, Record: car}
+		results = append(results, queryResult)
+	}
+
+	return results, nil
+}
 
 
